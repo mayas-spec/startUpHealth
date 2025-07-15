@@ -5,8 +5,8 @@
     "description": "A site where your wellbeing matters to us. You are our priority",
     "version": "1.0.0"
   },
-  "host": "startuphealth.onrender.com/",
-  "basePath": "/",
+  "host": "startuphealth.onrender.com",
+  "basePath": "/api",
   "schemes": [
     "https"
   ],
@@ -27,10 +27,10 @@
                 "email": {
                   "example": "any"
                 },
-                "password": {
+                "contact": {
                   "example": "any"
                 },
-                "contact": {
+                "password": {
                   "example": "any"
                 },
                 "confirmPassword": {
