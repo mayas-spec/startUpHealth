@@ -5,8 +5,8 @@ const doc = {
     title: "MAFIA",
     description: "A site where your wellbeing matters to us. You are our priority",
   },
-  host: "localhost:4500",
-  schemes: ["http"],
+  host: "startuphealth.onrender.com",
+  schemes: ["https"],
 };
 const outputFile = "./swagger-output.json";
 const routes = ["./app.js"];
