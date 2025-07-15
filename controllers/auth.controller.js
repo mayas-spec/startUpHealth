@@ -7,7 +7,7 @@ const {generateResetToken,generateToken,generateEmailVerificationToken} = requir
 
 const SignUp = async (req, res) => {
   console.log("Signup route hit:", req.body);
-  const { fullName, email, password, contact, confirmPassword } = req.body;
+  const { fullName, email,contact, password,confirmPassword } = req.body;
 
   try {
     const normalizedEmail = email.toLowerCase();
