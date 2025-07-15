@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const userCtrl = require('../controllers/user.controller');
 const {auth,authorize} = require('../middlewares/authMiddleware');
-
+const { validateUserProfile } = require('../middlewares/validation');
 
 router.get('/profile', auth, authorize('user'), userCtrl.getUserProfile);
 router.put('/profile', auth, authorize('user'), userCtrl.updateUserProfile);
-router.delete('/account', auth, authorize('user'), userCtrl.deleteAccount);
+router.delete('/account', auth, authorize('user'),validateUserProfile, userCtrl.deleteAccount);
 
 module.exports = router;

@@ -228,6 +228,29 @@ const validateBlog = (req, res, next) => {
   next();
 };
 
+const validateUserProfile = (req, res, next) => {
+  const schema = Joi.object({
+    fullName: Joi.string().min(2).max(50).optional(),
+    email: Joi.string().email().optional(),
+    contact: Joi.string().min(10).max(15).optional(),
+    password: Joi.string().min(6).optional(),
+    confirmPassword: Joi.string()
+      .valid(Joi.ref('password'))
+      .optional()
+      .messages({
+        'any.only': 'Passwords do not match',
+      }),
+  });
+
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({
+      error: error.details[0].message,
+    });
+  }
+
+  next();
+};
 
 
 module.exports = {
@@ -240,6 +263,7 @@ module.exports = {
   validateStockUpdate,
   validateAppointment ,
   validateReview,
-  validateBlog
+  validateBlog,
+  validateUserProfile
   
 };

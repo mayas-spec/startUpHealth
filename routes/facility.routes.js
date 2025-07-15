@@ -36,7 +36,7 @@ router.get(
 router.put(
   "/:id",
   auth,
-  authorize("facility_admin"),
+  authorize("facility_admin"),validateFacility,
   facilityCtrl.updateFacility
 );
 router.post(

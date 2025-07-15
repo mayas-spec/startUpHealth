@@ -7,7 +7,7 @@ const {generateResetToken,generateToken,generateEmailVerificationToken} = requir
 
 const SignUp = async (req, res) => {
   console.log("Signup route hit:", req.body);
-  const { fullName, email, password, contact } = req.body;
+  const { fullName, email, password, contact, confirmPassword } = req.body;
 
   try {
     const normalizedEmail = email.toLowerCase();
@@ -26,6 +26,7 @@ const SignUp = async (req, res) => {
       email: normalizedEmail,
       contact,
       password,
+      confirmPassword,
       isEmailVerified: false,
     });
 
@@ -402,6 +403,72 @@ const createFacilityAdmin = async (req, res) => {
   }
 };
 
+const resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Validate email
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        message: "Email is required",
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if the user exists
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({
+        message: "User with this email does not exist",
+      });
+    }
+
+    // Check if the email is already verified
+    if (user.isEmailVerified) {
+      return res.status(200).json({
+        message: "Email is already verified. You can log in.",
+      });
+    }
+
+    // Generate a new verification token
+    const verificationPayload = {
+      email: normalizedEmail,
+      type: "email_verification",
+      timestamp: Date.now(),
+    };
+    const verificationToken = generateToken(verificationPayload);
+
+    // Create a new verification link
+    const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+
+    // Send the verification email
+    await sendEmail({
+      to: normalizedEmail,
+      subject: "Resend Email Verification Link",
+      html: `
+        <h2>Email Verification</h2>
+        <p>Please click the link below to verify your email:</p>
+        <a href="${verificationLink}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
+        <p>This link will expire in 24 hours.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      `,
+    });
+
+    console.log(`Verification email resent to: ${user.email}`);
+
+    res.status(200).json({
+      message: "A new verification email has been sent. Please check your inbox.",
+    });
+  } catch (error) {
+    console.error("Error resending verification email:", error);
+    res.status(500).json({
+      message: "An error occurred while resending the verification email",
+      error: error.message,
+    });
+  }
+};
+
 
 module.exports = {
   SignUp,
@@ -409,5 +476,6 @@ module.exports = {
   sendResetLink,
   resetPassword,
   VerifyEmail,
-  createFacilityAdmin
+  createFacilityAdmin,
+  resendVerificationEmail
 };
