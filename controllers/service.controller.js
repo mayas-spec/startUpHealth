@@ -2,12 +2,36 @@ const Service = require("../models/services");
 
 const createService = async (req, res) => {
   try {
+    // Add the facilityId from the URL to the request body
+    const facilityId = req.params.facilityId;
+    req.body.facility = facilityId;
+
+    // Create the service
     const newService = await Service.create(req.body);
-    res.status(201).json(newService);
+
+    // Add the service to the facility's services array
+    const updatedFacility = await Facility.findByIdAndUpdate(
+      facilityId,
+      { $push: { services: newService._id } },
+      { new: true }
+    );
+    const facility = await Facility.findById(facilityId);
+    console.log("Updated Facility Services:", facility.services);
+    if (!updatedFacility) {
+      return res.status(404).json({ message: "Facility not found" });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "Service created successfully",
+      data: newService,
+    });
   } catch (error) {
+    console.error("Error creating service:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 const updateService = async (req, res) => {
   try {

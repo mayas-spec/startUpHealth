@@ -1,4 +1,5 @@
 const Facility = require('../models/facility');
+const User = require('../models/User');
 
 const addFacility = async (req, res) => {
   try {
@@ -57,7 +58,6 @@ const getAllFacilities = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    // Validate pagination parameters
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.max(1, parseInt(limit));
 
@@ -74,7 +74,7 @@ const getAllFacilities = async (req, res) => {
     console.log("Facilities Query:", { isActive: true });
     console.log("Facilities Found:", facilities.length);
 
-    // Respond with facilities and pagination metadata
+   
     res.status(200).json({
       success: true,
       data: facilities,
@@ -156,36 +156,25 @@ const updateFacility = async (req, res) => {
   }
 };
 
-const getFacilityById = async (req, res) => {
+const getFacilityWithServices = async (req, res) => {
   try {
-    const facility = await Facility.findById(req.params.id)
-    .populate({
-      path:'admin',
-      select: 'fullName email',
-      strictPopulate: false
-    })
-      .populate('services', 'name description price');
-    
-    if (!facility) {
-      return res.status(404).json({
-        success: false,
-        message: 'Facility not found'
-      });
-    }
+    const facilityId = req.params.id;
 
-    // Add current status
-    const facilityData = facility.toObject();
-    facilityData.isCurrentlyOpen = facility.isCurrentlyOpen();
+    // Fetch the facility and populate its services
+    const facility = await Facility.findById(facilityId)
+      .populate('services', 'name description price isActive');
+
+    if (!facility) {
+      return res.status(404).json({ message: "Facility not found" });
+    }
 
     res.status(200).json({
       success: true,
-      data: facilityData
+      data: facility, // Includes populated services
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false,
-      message: error.message 
-    });
+    console.error("Error fetching facility with services:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
@@ -370,39 +359,44 @@ const getAvailableTimeSlots = async (req, res) => {
 
 const getFacilityDashboard = async (req, res) => {
   try {
-    // Get facilities managed by this admin
     const adminId = req.user.id;
-    
-    const facilities = await Facility.find({ admin: adminId })
-      .populate('services', 'name description');
-    
-    // Calculate dashboard statistics
+
+    // Verify the admin's role
+    const admin = await User.findById(adminId).populate('facility');
+    if (!admin || admin.role !== 'facility_admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    console.log("Facility linked to admin:", admin.facility);
+
+    // Fetch facilities linked to the admin and populate services
+    const facilities = await Facility.find({ _id: { $in: admin.facility }, isActive: true })
+      .populate('services', 'name description price isActive');
+
+    // Calculate statistics
     const totalFacilities = facilities.length;
-    const activeFacilities = facilities.filter(f => f.isActive).length;
-    const averageRating = facilities.reduce((sum, f) => sum + f.rating.average, 0) / totalFacilities || 0;
-    const totalReviews = facilities.reduce((sum, f) => sum + f.rating.count, 0);
-    
+    const activeFacilities = facilities.filter(facility => facility.isActive).length;
+    const averageRating = facilities.reduce((sum, facility) => sum + (facility.rating?.average || 0), 0) / totalFacilities || 0;
+    const totalReviews = facilities.reduce((sum, facility) => sum + (facility.rating?.count || 0), 0);
+
+    // Return the dashboard data
     res.status(200).json({
       success: true,
       data: {
         statistics: {
           totalFacilities,
           activeFacilities,
-          averageRating: Math.round(averageRating * 100) / 100,
-          totalReviews
+          averageRating,
+          totalReviews,
         },
-        facilities
-      }
+        facilities, // Includes populated services
+      },
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false,
-      message: error.message 
-    });
+    console.error("Error fetching facility dashboard:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
-
-
 
 const uploadFacilityPhotos = async (req, res) => {
   try {
@@ -447,7 +441,7 @@ module.exports = {
   deactivateFacility,
   getAllFacilities,
   updateFacility,
-  getFacilityById,
+  getFacilityWithServices,
   searchFacilities,
   getNearbyFacilities,
   getAvailableTimeSlots,

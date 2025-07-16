@@ -4,13 +4,13 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { sendSignUpNotification } = require("../services/notification.service");
 const { generateResetToken, generateToken, generateEmailVerificationToken } = require("../config/jwtConfig");
+const { sendEmail } = require("../services/email");
 
 const SignUp = async (req, res) => {
   console.log("Signup route hit:", req.body);
   const { fullName, email, contact, password, confirmPassword } = req.body;
 
   try {
-    
     if (!email || !password || !confirmPassword || !fullName) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -20,19 +20,17 @@ const SignUp = async (req, res) => {
 
     const normalizedEmail = email.toLowerCase();
 
-
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create the user
+    // Create the user (plain text password, hashing handled by pre('save') hook)
     const user = await User.create({
       fullName,
       email: normalizedEmail,
       contact,
       password,
-      confirmPassword,
       isEmailVerified: false,
     });
 
@@ -71,7 +69,6 @@ const SignUp = async (req, res) => {
 };
 
 
-
 const Login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -79,7 +76,7 @@ const Login = async (req, res) => {
     console.log("Login attempt:", email);
     const normalizedEmail = email.toLowerCase();
     const user = await User.findOne({ email: normalizedEmail });
-
+    
     if (!user) {
       console.log("User not found");
       return res.status(400).json({ message: "Invalid credentials" });
@@ -96,6 +93,7 @@ const Login = async (req, res) => {
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     console.log("Password match result:", isMatch);
+
 
     if (!isMatch) {
       console.log("Password comparison failed");
@@ -362,30 +360,25 @@ const createFacilityAdmin = async (req, res) => {
   try {
     const { fullName, email, password, contact, facility } = req.body;
 
-    // Check if the user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ message: "User with this email already exists" });
     }
 
-    // Check if the facility exists
     const existingFacility = await Facility.findById(facility);
     if (!existingFacility) {
       return res.status(404).json({ message: "Facility not found" });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create the facility admin
+    // Create the facility admin (plain text password, hashing handled by pre('save') hook)
     const facilityAdmin = await User.create({
       fullName,
       email: email.toLowerCase(),
-      password: hashedPassword,
+      password,
       contact,
       role: "facility_admin",
       isEmailVerified: true,
-      facility, 
+      facility,
     });
 
     res.status(201).json({
@@ -404,6 +397,7 @@ const createFacilityAdmin = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
 
 const resendVerificationEmail = async (req, res) => {
   try {

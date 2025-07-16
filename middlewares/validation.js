@@ -122,6 +122,7 @@ const validateService = (req, res, next) => {
     type: Joi.string().valid('medication', 'vaccine', 'test').required(),
     description: Joi.string().max(500).optional(),
     category: Joi.string().max(50).optional(),
+    facility: Joi.string().required(),
     stock: Joi.object({
       quantity: Joi.number().min(0).optional(),
       lowStockThreshold: Joi.number().min(1).optional()
@@ -139,9 +140,10 @@ const validateService = (req, res, next) => {
       error: error.details[0].message
     });
   }
-  
+
   next();
 };
+
 
 // Validation for stock updates
 const validateStockUpdate = (req, res, next) => {

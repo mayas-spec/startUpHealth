@@ -23,7 +23,6 @@ router.delete(
 router.get("/", facilityCtrl.getAllFacilities);
 router.get("/search", facilityCtrl.searchFacilities);
 router.get("/nearby", facilityCtrl.getNearbyFacilities);
-router.get("/:id", facilityCtrl.getFacilityById);
 router.get("/:id/time-slots", facilityCtrl.getAvailableTimeSlots);
 
 // Facility Admin routes
@@ -36,7 +35,8 @@ router.get(
 router.put(
   "/:id",
   auth,
-  authorize("facility_admin"),validateFacility,
+  authorize("facility_admin"),
+  validateFacility,
   facilityCtrl.updateFacility
 );
 router.post(
@@ -45,5 +45,6 @@ router.post(
   authorize("facility_admin"),
   facilityCtrl.uploadFacilityPhotos
 );
+router.get("/:id", auth, authorize("facility_admin"), facilityCtrl.getFacilityWithServices);
 
 module.exports = router;
