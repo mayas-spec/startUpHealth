@@ -404,16 +404,6 @@
             "name": "limit",
             "in": "query",
             "type": "string"
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "type": "string"
-          },
-          {
-            "name": "city",
-            "in": "query",
-            "type": "string"
           }
         ],
         "responses": {

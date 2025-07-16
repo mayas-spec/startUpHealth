@@ -1,32 +1,24 @@
-const Facility = require("../models/facility");
+const Facility = require('../models/facility');
 
 const addFacility = async (req, res) => {
   try {
     const { name, type, location, contact } = req.body;
 
-    if (
-      !name ||
-      !type ||
-      !location ||
-      !location.address ||
-      !location.city ||
-      !contact
-    ) {
+    if (!name || !type || !location || !location.address || !location.city || !contact) {
       return res.status(400).json({
         success: false,
-        message:
-          "Name, type,location (address and city and contact) are required",
+        message: 'Name, type,location (address and city and contact) are required',
       });
     }
 
     const newFacility = await Facility.create(req.body);
     res.status(201).json({
       success: true,
-      message: "Facility created successfully",
+      message: 'Facility created successfully',
       data: newFacility,
     });
   } catch (error) {
-    console.error("Error creating facility:", error);
+    console.error('Error creating facility:', error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -41,54 +33,42 @@ const deactivateFacility = async (req, res) => {
       { isActive: false },
       { new: true }
     );
-
+    
     if (!updatedFacility) {
       return res.status(404).json({
         success: false,
-        message: "Facility not found",
+        message: 'Facility not found'
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Facility deactivated successfully",
+      message: 'Facility deactivated successfully'
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
-      message: error.message,
+      message: error.message 
     });
   }
 };
 
 const getAllFacilities = async (req, res) => {
   try {
-    const { page = 1, limit = 10, type, city } = req.query;
-
-    // Build query object
-    let query = { isActive: true };
-
-    // Filter by type
-    if (type) {
-      query.type = type;
-    }
-
-    // Filter by city
-    if (city) {
-      query["location.city"] = { $regex: city, $options: "i" };
-    }
+    const { page = 1, limit = 10 } = req.query;
 
     // Fetch facilities with pagination
-    const facilities = await Facility.find(query)
-      .populate("admin", "fullName email")
-      .populate("services", "name description")
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .sort({ createdAt: -1 });
+    const facilities = await Facility.find({ isActive: true })
+      .populate("admin", "fullName email") // Populate admin details
+      .populate("services", "name description") // Populate services details
+      .limit(parseInt(limit)) // Limit the number of results
+      .skip((parseInt(page) - 1) * parseInt(limit)) // Skip results for pagination
+      .sort({ createdAt: -1 }); // Sort by creation date (newest first)
 
     // Get total count for pagination
-    const total = await Facility.countDocuments(query);
+    const total = await Facility.countDocuments({ isActive: true });
 
+    // Respond with facilities and pagination metadata
     res.status(200).json({
       success: true,
       data: facilities,
@@ -108,60 +88,62 @@ const getAllFacilities = async (req, res) => {
   }
 };
 
+
 const updateFacility = async (req, res) => {
   try {
     const { name, type, location, contact } = req.body;
 
-    if (name && typeof name !== "string") {
+    if (name && typeof name !== 'string') {
       return res.status(400).json({
         success: false,
-        message: "Name must be a string",
+        message: 'Name must be a string',
       });
     }
 
-    if (type && !["hospital", "pharmacy"].includes(type)) {
+    if (type && !['hospital', 'pharmacy'].includes(type)) {
       return res.status(400).json({
         success: false,
-        message: "Type must be either hospital or pharmacy",
+        message: 'Type must be either hospital or pharmacy',
       });
     }
     if (location) {
       if (!location.address || !location.city) {
         return res.status(400).json({
           success: false,
-          message: "Location must include address and city",
+          message: 'Location must include address and city',
         });
       }
     }
-
+    
     if (contact) {
-      if (!contact.phone || typeof contact.phone !== "string") {
+      if (!contact.phone || typeof contact.phone !== 'string') {
         return res.status(400).json({
           success: false,
-          message: "Contact must include a valid phone number",
+          message: 'Contact must include a valid phone number',
         });
       }
     }
 
-    const updated = await Facility.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const updated = await Facility.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
 
     if (!updated) {
       return res.status(404).json({
         success: false,
-        message: "Facility not found",
+        message: 'Facility not found',
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Facility updated successfully",
+      message: 'Facility updated successfully',
       data: updated,
     });
   } catch (error) {
-    console.error("Error updating facility:", error);
+    console.error('Error updating facility:', error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -172,17 +154,17 @@ const updateFacility = async (req, res) => {
 const getFacilityById = async (req, res) => {
   try {
     const facility = await Facility.findById(req.params.id)
-      .populate({
-        path: "admin",
-        select: "fullName email",
-        strictPopulate: false,
-      })
-      .populate("services", "name description price");
-
+    .populate({
+      path:'admin',
+      select: 'fullName email',
+      strictPopulate: false
+    })
+      .populate('services', 'name description price');
+    
     if (!facility) {
       return res.status(404).json({
         success: false,
-        message: "Facility not found",
+        message: 'Facility not found'
       });
     }
 
@@ -192,27 +174,19 @@ const getFacilityById = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: facilityData,
+      data: facilityData
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
-      message: error.message,
+      message: error.message 
     });
   }
 };
 
 const searchFacilities = async (req, res) => {
   try {
-    const {
-      q,
-      type,
-      city,
-      page = 1,
-      limit = 10,
-      sortBy = "createdAt",
-      sortOrder = "desc",
-    } = req.query;
+    const { q, type, city, page = 1, limit = 10, sortBy = "createdAt", sortOrder = "desc" } = req.query;
 
     // Build query object
     let query = { isActive: true };
@@ -220,8 +194,8 @@ const searchFacilities = async (req, res) => {
     // Search by name or description
     if (q) {
       query.$or = [
-        { name: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } },
+        { name: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
       ];
     }
 
@@ -232,7 +206,7 @@ const searchFacilities = async (req, res) => {
 
     // Filter by city
     if (city) {
-      query["location.city"] = { $regex: city, $options: "i" };
+      query['location.city'] = { $regex: city, $options: 'i' };
     }
 
     // Sorting options
@@ -240,12 +214,13 @@ const searchFacilities = async (req, res) => {
 
     // Fetch facilities with pagination and sorting
     const facilities = await Facility.find(query)
-      .populate("admin", "fullName email")
-      .populate("services", "name description")
+      .populate('admin', 'fullName email')
+      .populate('services', 'name description')
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit))
       .sort(sortOptions);
 
+    // Get total count for pagination
     const total = await Facility.countDocuments(query);
 
     res.status(200).json({
@@ -259,13 +234,14 @@ const searchFacilities = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error searching facilities:", error);
+    console.error('Error searching facilities:', error);
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 
 const getNearbyFacilities = async (req, res) => {
   try {
@@ -274,19 +250,19 @@ const getNearbyFacilities = async (req, res) => {
     if (!lat || !lng) {
       return res.status(400).json({
         success: false,
-        message: "Latitude and longitude are required",
+        message: 'Latitude and longitude are required',
       });
     }
 
     let query = {
       isActive: true,
-      "location.coordinates": {
+      'location.coordinates': {
         $near: {
           $geometry: {
-            type: "Point",
+            type: 'Point',
             coordinates: [parseFloat(lng), parseFloat(lat)],
           },
-          $maxDistance: radius * 1000,
+          $maxDistance: radius * 1000, 
         },
       },
     };
@@ -296,8 +272,8 @@ const getNearbyFacilities = async (req, res) => {
     }
 
     const facilities = await Facility.find(query)
-      .populate("admin", "name email")
-      .populate("services", "name description")
+      .populate('admin', 'name email')
+      .populate('services', 'name description')
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
@@ -314,13 +290,14 @@ const getNearbyFacilities = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error finding nearby facilities:", error);
+    console.error('Error finding nearby facilities:', error);
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 
 const getAvailableTimeSlots = async (req, res) => {
   try {
@@ -330,7 +307,7 @@ const getAvailableTimeSlots = async (req, res) => {
     if (!date) {
       return res.status(400).json({
         success: false,
-        message: "Date is required (format: YYYY-MM-DD)",
+        message: 'Date is required (format: YYYY-MM-DD)',
       });
     }
 
@@ -339,20 +316,18 @@ const getAvailableTimeSlots = async (req, res) => {
     if (!facility) {
       return res.status(404).json({
         success: false,
-        message: "Facility not found",
+        message: 'Facility not found',
       });
     }
 
     const requestedDate = new Date(date);
-    const dayName = requestedDate
-      .toLocaleDateString("en-US", { weekday: "long" })
-      .toLowerCase();
+    const dayName = requestedDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const dayHours = facility.hours[dayName];
 
     if (!dayHours || !dayHours.open || !dayHours.close) {
       return res.status(200).json({
         success: true,
-        message: "Facility is closed on this day",
+        message: 'Facility is closed on this day',
         data: {
           date,
           availableSlots: [],
@@ -360,18 +335,14 @@ const getAvailableTimeSlots = async (req, res) => {
       });
     }
 
-    const openTime = parseInt(dayHours.open.replace(":", ""), 10);
-    const closeTime = parseInt(dayHours.close.replace(":", ""), 10);
+    const openTime = parseInt(dayHours.open.replace(':', ''), 10);
+    const closeTime = parseInt(dayHours.close.replace(':', ''), 10);
 
     const timeSlots = [];
     for (let time = openTime; time < closeTime; time += 100) {
       const hour = Math.floor(time / 100);
       const minute = time % 100;
-      timeSlots.push(
-        `${hour.toString().padStart(2, "0")}:${minute
-          .toString()
-          .padStart(2, "0")}`
-      );
+      timeSlots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
     }
 
     res.status(200).json({
@@ -384,7 +355,7 @@ const getAvailableTimeSlots = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error getting available time slots:", error);
+    console.error('Error getting available time slots:', error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -396,20 +367,16 @@ const getFacilityDashboard = async (req, res) => {
   try {
     // Get facilities managed by this admin
     const adminId = req.user.id;
-
-    const facilities = await Facility.find({ admin: adminId }).populate(
-      "services",
-      "name description"
-    );
-
+    
+    const facilities = await Facility.find({ admin: adminId })
+      .populate('services', 'name description');
+    
     // Calculate dashboard statistics
     const totalFacilities = facilities.length;
-    const activeFacilities = facilities.filter((f) => f.isActive).length;
-    const averageRating =
-      facilities.reduce((sum, f) => sum + f.rating.average, 0) /
-        totalFacilities || 0;
+    const activeFacilities = facilities.filter(f => f.isActive).length;
+    const averageRating = facilities.reduce((sum, f) => sum + f.rating.average, 0) / totalFacilities || 0;
     const totalReviews = facilities.reduce((sum, f) => sum + f.rating.count, 0);
-
+    
     res.status(200).json({
       success: true,
       data: {
@@ -417,53 +384,55 @@ const getFacilityDashboard = async (req, res) => {
           totalFacilities,
           activeFacilities,
           averageRating: Math.round(averageRating * 100) / 100,
-          totalReviews,
+          totalReviews
         },
-        facilities,
-      },
+        facilities
+      }
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
-      message: error.message,
+      message: error.message 
     });
   }
 };
 
+
+
 const uploadFacilityPhotos = async (req, res) => {
   try {
     const facilityId = req.params.id;
-    const { images } = req.body;
-
+    const { images } = req.body; 
+    
     if (!images || !Array.isArray(images)) {
       return res.status(400).json({
         success: false,
-        message: "Images array is required",
+        message: 'Images array is required'
       });
     }
-
+    
     const facility = await Facility.findByIdAndUpdate(
       facilityId,
       { $push: { images: { $each: images } } },
       { new: true }
     );
-
+    
     if (!facility) {
       return res.status(404).json({
         success: false,
-        message: "Facility not found",
+        message: 'Facility not found'
       });
     }
-
+    
     res.status(200).json({
       success: true,
-      message: "Photos uploaded successfully",
-      data: facility,
+      message: 'Photos uploaded successfully',
+      data: facility
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
-      message: error.message,
+      message: error.message 
     });
   }
 };
@@ -478,5 +447,5 @@ module.exports = {
   getNearbyFacilities,
   getAvailableTimeSlots,
   getFacilityDashboard,
-  uploadFacilityPhotos,
+  uploadFacilityPhotos
 };
