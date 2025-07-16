@@ -2,15 +2,27 @@ const Review = require('../models/reviews');
 
 const createReviews = async (req, res) => {
   try {
-    const review = await Review.create({
-      ...req.body,
-      user: req.user.id 
-    });
+    // Destructure the allowed fields from req.body
+    const { rating, comment, facility } = req.body;
+
+    // Construct the review object
+    const reviewData = {
+      rating,
+      comment,
+      facility,
+      user: req.user.id, 
+    };
+
+    // Create the review
+    const review = await Review.create(reviewData);
+
     res.status(201).json(review);
   } catch (error) {
+    console.error("Error creating review:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 const getFacilityReviews = async (req, res) => {
   try {

@@ -1,5 +1,4 @@
 const Service = require("../models/services");
-const Facility = require("../models/facility");
 
 const createService = async (req, res) => {
   try {
@@ -11,16 +10,9 @@ const createService = async (req, res) => {
     const newService = await Service.create(req.body);
 
     // Add the service to the facility's services array
-    const updatedFacility = await Facility.findByIdAndUpdate(
-      facilityId,
-      { $push: { services: newService._id } },
-      { new: true }
-    );
-    const facility = await Facility.findById(facilityId);
-    console.log("Updated Facility Services:", facility.services);
-    if (!updatedFacility) {
-      return res.status(404).json({ message: "Facility not found" });
-    }
+    await Facility.findByIdAndUpdate(facilityId, {
+      $push: { services: newService._id }
+    });
 
     res.status(201).json({
       success: true,
@@ -36,14 +28,39 @@ const createService = async (req, res) => {
 
 const updateService = async (req, res) => {
   try {
-    const updatedService = await Service.findByIdAndUpdate(req.params.id, req.body, {
+    // Destructure the allowed fields from req.body
+    const { name, type, description, category, stock, price, requiresAppointment } = req.body;
+
+    // Construct the updated data object
+    const updatedData = {
+      ...(name && { name }),
+      ...(type && { type }),
+      ...(description && { description }),
+      ...(category && { category }),
+      ...(stock && { stock }),
+      ...(price && { price }),
+      ...(requiresAppointment !== undefined && { requiresAppointment }),
+    };
+
+    // Update the service in the database
+    const updatedService = await Service.findByIdAndUpdate(req.params.id, updatedData, {
       new: true,
     });
-    res.status(200).json(updatedService);
+
+    if (!updatedService) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    res.status(200).json({
+      message: "Service updated successfully",
+      data: updatedService,
+    });
   } catch (error) {
+    console.error("Error updating service:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 const deleteService = async (req, res) => {
   try {
