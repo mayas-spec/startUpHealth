@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { sendSignUpNotification } = require("../services/notification.service");
 const { generateResetToken, generateToken, generateEmailVerificationToken } = require("../config/jwtConfig");
-const { sendEmail } = require("../services/email");
+const  sendEmail  = require("../services/email");
 
 const SignUp = async (req, res) => {
   console.log("Signup route hit:", req.body);
