@@ -1,8 +1,22 @@
 const express = require("express");
 const router = express.Router();
-const chatCtrl = require("../controllers/chatbot.controller");
-const { auth, authorize } = require("../middlewares/authMiddleware");
+const { getChatbotResponse } = require("../services/cohere");
 
-router.post("/query", auth, authorize("user"), chatCtrl.askChatbot);
+router.post('/query', async (req, res) => {
+    try {
+      const { message } = req.body;
+      const response = await getChatbotResponse(message);
+      res.json({
+        success: true,
+        response: response
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to get chatbot response",
+        error: error.message
+      });
+    }
+  });
 
 module.exports = router;
