@@ -2,22 +2,28 @@ const User = require("../models/User");
 const Facility = require("../models/facility");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const sendEmail  = require("../services/email");
-const {generateResetToken,generateToken,generateEmailVerificationToken} = require("../config/jwtConfig");
+const { sendSignUpNotification } = require("../services/notification.service");
+const { generateResetToken, generateToken, generateEmailVerificationToken } = require("../config/jwtConfig");
 
 const SignUp = async (req, res) => {
   console.log("Signup route hit:", req.body);
-  const { fullName, email,contact, password,confirmPassword } = req.body;
+  const { fullName, email, contact, password, confirmPassword } = req.body;
 
   try {
+    
+    if (!email || !password || !confirmPassword || !fullName) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
     const normalizedEmail = email.toLowerCase();
 
-    // Check if user already exists
+
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      return res.status(400).json({
-        message: "User already exists",
-      });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     // Create the user
@@ -40,21 +46,16 @@ const SignUp = async (req, res) => {
     };
     const verificationToken = generateToken(verificationPayload);
 
+    // Validate CLIENT_URL
+    if (!process.env.CLIENT_URL) {
+      throw new Error("CLIENT_URL is not defined in environment variables");
+    }
+
     // Create verification link
     const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
 
-    // Send verification email
-    await sendEmail({
-      to: normalizedEmail,
-      subject: "Verify your email",
-      html: `
-        <h2>Welcome ${fullName}!</h2>
-        <p>Please click the link below to verify your email and complete your registration:</p>
-        <a href="${verificationLink}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
-        <p>This link will expire in 24 hours.</p>
-        <p>If you didn't create this account, please ignore this email.</p>
-      `,
-    });
+    // Send verification email using notification service
+    await sendSignUpNotification(normalizedEmail, fullName, verificationLink);
 
     res.status(201).json({
       message: "Registration successful. Please check your email to verify your account.",
@@ -68,6 +69,7 @@ const SignUp = async (req, res) => {
     });
   }
 };
+
 
 
 const Login = async (req, res) => {

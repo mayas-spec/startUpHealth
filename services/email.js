@@ -1,30 +1,44 @@
-const formData = require('form-data');
-const Mailgun = require('mailgun.js');
+const nodemailer = require("nodemailer");
 
-const mailgun = new Mailgun(formData);
-const mg = mailgun.client({
-  username: 'api',
-  key: process.env.MAILGUN_API_KEY,
-  url: 'https://api.mailgun.net' 
-});
-
-const sendEmail = async (options) => {
-  const message = {
-    from: `MAFIA Platform <${process.env.FROM_EMAIL}>`,
-    to: options.to,
-    subject: options.subject,
-    html: options.html
-  };
-
+const sendEmail = async ({ to, subject, text, html }) => {
   try {
-    const result = await mg.messages.create(process.env.MAILGUN_DOMAIN, message);
-    console.log('Email sent successfully to:', options.to);
-    console.log('Mailgun response:', result);
-    return result;
+  
+    const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!validateEmail(to)) {
+      throw new Error("Invalid recipient email address");
+    }
+
+  
+    if (!text && !html) {
+      throw new Error("Email content (text or html) is required");
+    }
+
+    // Create transporter
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // Use SSL
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Send email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to,
+      subject,
+      text,
+      html,
+    };
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent:", info.messageId);
+    return info;
   } catch (error) {
-    console.error('Failed to send email:', error.message);
-    throw error;
+    console.error("Email failed to send:", error);
+    throw error; 
   }
 };
 
-module.exports =  sendEmail ;
+module.exports = sendEmail;
