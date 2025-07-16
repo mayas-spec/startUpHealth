@@ -568,6 +568,16 @@
             "name": "limit",
             "in": "query",
             "type": "string"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "type": "string"
           }
         ],
         "responses": {
