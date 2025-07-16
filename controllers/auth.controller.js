@@ -1,3 +1,4 @@
+require("dotenv").config();
 const User = require("../models/User");
 const Facility = require("../models/facility");
 const jwt = require("jsonwebtoken");
@@ -5,7 +6,7 @@ const bcrypt = require("bcryptjs");
 const { sendSignUpNotification } = require("../services/notification.service");
 const { generateResetToken, generateToken, generateEmailVerificationToken } = require("../config/jwtConfig");
 const  sendEmail  = require("../services/email");
-require("dotenv").config();
+
 
 
 const SignUp = async (req, res) => {
@@ -287,7 +288,7 @@ const VerifyEmail = async (req, res) => {
       if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
         const { email } = jwt.decode(token);
         if (!email) {
-          return res.status(400).json({
+          return re.status(400).json({
             message: "Invalid or expired verification token, and email could not be retrieved.",
           });
         }
@@ -297,6 +298,7 @@ const VerifyEmail = async (req, res) => {
 
         // Send the new verification email
         const verificationLink = `${process.env.CLIENT_URL}/verify-email/${newToken}`;
+        
         await sendEmail({
           to: email,
           subject: "New Email Verification Link",
