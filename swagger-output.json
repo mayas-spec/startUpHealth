@@ -768,7 +768,25 @@
             "schema": {
               "type": "object",
               "properties": {
-                "facility": {
+                "name": {
+                  "example": "any"
+                },
+                "type": {
+                  "example": "any"
+                },
+                "description": {
+                  "example": "any"
+                },
+                "category": {
+                  "example": "any"
+                },
+                "stock": {
+                  "example": "any"
+                },
+                "price": {
+                  "example": "any"
+                },
+                "requiresAppointment": {
                   "example": "any"
                 }
               }

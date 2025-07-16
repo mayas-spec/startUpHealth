@@ -3,16 +3,30 @@ const Facility = require("../models/facility");
 
 const createService = async (req, res) => {
   try {
-    // Add the facilityId from the URL to the request body
+    // Destructure the allowed fields from req.body
+    const { name, type, description, category, stock, price, requiresAppointment } = req.body;
+
+    // Add the facilityId from the URL to the service data
     const facilityId = req.params.facilityId;
-    req.body.facility = facilityId;
+
+    // Construct the service object
+    const serviceData = {
+      name,
+      type,
+      description,
+      category,
+      stock,
+      price,
+      requiresAppointment,
+      facility: facilityId, 
+    };
 
     // Create the service
-    const newService = await Service.create(req.body);
+    const newService = await Service.create(serviceData);
 
     // Add the service to the facility's services array
     await Facility.findByIdAndUpdate(facilityId, {
-      $push: { services: newService._id }
+      $push: { services: newService._id },
     });
 
     res.status(201).json({
