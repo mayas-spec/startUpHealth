@@ -57,26 +57,32 @@ const getAllFacilities = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    // Fetch facilities with pagination
-    const facilities = await Facility.find({ isActive: true })
-      .populate("admin", "fullName email") // Populate admin details
-      .populate("services", "name description") // Populate services details
-      .limit(parseInt(limit)) // Limit the number of results
-      .skip((parseInt(page) - 1) * parseInt(limit)) // Skip results for pagination
-      .sort({ createdAt: -1 }); // Sort by creation date (newest first)
+    // Validate pagination parameters
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.max(1, parseInt(limit));
+
+    const facilities = await Facility.find()
+  .populate("services", "name description") 
+  .limit(limitNum)
+  .skip((pageNum - 1) * limitNum)
+  .sort({ createdAt: -1 });
 
     // Get total count for pagination
     const total = await Facility.countDocuments({ isActive: true });
+
+    // Debugging: Log the query and results
+    console.log("Facilities Query:", { isActive: true });
+    console.log("Facilities Found:", facilities.length);
 
     // Respond with facilities and pagination metadata
     res.status(200).json({
       success: true,
       data: facilities,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(total / limitNum),
       },
     });
   } catch (error) {
@@ -87,7 +93,6 @@ const getAllFacilities = async (req, res) => {
     });
   }
 };
-
 
 const updateFacility = async (req, res) => {
   try {
