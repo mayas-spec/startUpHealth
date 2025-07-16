@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { getChatbotResponse } = require("../services/cohere");
+const { auth } = require("../middlewares/authMiddleware");
 
-router.post('/query', async (req, res) => {
+router.post('/query', auth, async (req, res) => {
     try {
       const { message } = req.body;
       const response = await getChatbotResponse(message);
