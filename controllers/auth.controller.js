@@ -5,6 +5,8 @@ const bcrypt = require("bcryptjs");
 const { sendSignUpNotification } = require("../services/notification.service");
 const { generateResetToken, generateToken, generateEmailVerificationToken } = require("../config/jwtConfig");
 const  sendEmail  = require("../services/email");
+require("dotenv").config();
+
 
 const SignUp = async (req, res) => {
   console.log("Signup route hit:", req.body);
