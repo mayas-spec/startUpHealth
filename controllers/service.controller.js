@@ -1,4 +1,5 @@
 const Service = require("../models/services");
+const Facility = require("../models/facility");
 
 const createService = async (req, res) => {
   try {
