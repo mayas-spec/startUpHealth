@@ -49,39 +49,37 @@ router.post(
   /* 
     #swagger.tags = ['Facilities']
     #swagger.summary = 'Upload facility photos'
-    #swagger.requestBody = {
-      required: true,
-      content: {
-        "multipart/form-data": {
-          schema: {
-            type: "object",
-            properties: {
-              files: {
-                type: "array",
-                items: {
-                  type: "string",
-                  format: "binary"
-                },
-                maxItems: 10,
-                description: "Upload up to 10 image files"
-              }
-            }
-          }
-        }
-      }
-    }
+    #swagger.description = 'Upload up to 10 photos for a facility'
+    #swagger.consumes = ['multipart/form-data']
     #swagger.parameters['id'] = {
       in: 'path',
       required: true,
       type: 'string',
       description: 'Facility ID'
     }
+    #swagger.parameters['files'] = {
+      in: 'formData',
+      name: 'files',
+      type: 'file',
+      required: true,
+      description: 'Image files to upload (max 10)'
+    }
     #swagger.responses[200] = {
       description: 'Photos uploaded successfully'
+    }
+    #swagger.responses[400] = {
+      description: 'Bad request'
+    }
+    #swagger.responses[401] = {
+      description: 'Unauthorized'
+    }
+    #swagger.responses[403] = {
+      description: 'Forbidden'
     }
   */
   facilityCtrl.uploadFacilityPhotos
 );
+
 
 router.get("/:id", facilityCtrl.getFacilityWithServices);
 

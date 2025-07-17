@@ -10,6 +10,13 @@
   "schemes": [
     "https"
   ],
+  "consumes": [
+    "application/json",
+    "multipart/form-data"
+  ],
+  "produces": [
+    "application/json"
+  ],
   "paths": {
     "/api/auth/signUp": {
       "post": {
@@ -691,7 +698,10 @@
           "Facilities"
         ],
         "summary": "Upload facility photos",
-        "description": "",
+        "description": "Upload up to 10 photos for a facility",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
           {
             "name": "id",
@@ -704,6 +714,13 @@
             "name": "Authorization",
             "in": "header",
             "type": "string"
+          },
+          {
+            "name": "files",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Image files to upload (max 10)"
           }
         ],
         "responses": {
@@ -711,7 +728,7 @@
             "description": "Photos uploaded successfully"
           },
           "400": {
-            "description": "Bad Request"
+            "description": "Bad request"
           },
           "401": {
             "description": "Unauthorized"
@@ -724,27 +741,6 @@
           },
           "500": {
             "description": "Internal Server Error"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "files": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "binary"
-                    },
-                    "maxItems": 10,
-                    "description": "Upload up to 10 image files"
-                  }
-                }
-              }
-            }
           }
         }
       }

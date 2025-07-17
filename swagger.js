@@ -8,6 +8,8 @@ const doc = {
   host: "startuphealth.onrender.com",
   basePath: "",
   schemes: ["https"],
+  consumes: ['application/json', 'multipart/form-data'], // Make sure this is included
+  produces: ['application/json'],
 };
 const outputFile = "./swagger-output.json";
 const routes = ["./app.js"];
