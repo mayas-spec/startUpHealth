@@ -40,6 +40,4 @@ const handleChatbotQuery = async (req, res) => {
   }
 };
 
-module.exports = {
-  handleChatbotQuery,
-};
+module.exports = {handleChatbotQuery};
