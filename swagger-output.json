@@ -152,14 +152,13 @@
         }
       }
     },
-    "/api/auth/verify-email/{token}": {
+    "/api/auth/verify-email": {
       "get": {
         "description": "",
         "parameters": [
           {
             "name": "token",
-            "in": "path",
-            "required": true,
+            "in": "query",
             "type": "string"
           }
         ],
@@ -711,18 +710,6 @@
             "name": "Authorization",
             "in": "header",
             "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "images": {
-                  "example": "any"
-                }
-              }
-            }
           }
         ],
         "responses": {
@@ -1658,6 +1645,11 @@
         "parameters": [
           {
             "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "authorization",
             "in": "header",
             "type": "string"
           },
