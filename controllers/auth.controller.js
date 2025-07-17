@@ -40,12 +40,8 @@ const SignUp = async (req, res) => {
     console.log("User created:", user.email);
 
     // Generate verification token
-    const verificationPayload = {
-      email: normalizedEmail,
-      type: "email_verification",
-      timestamp: Date.now(),
-    };
-    const verificationToken = generateToken(verificationPayload);
+    const verificationToken = generateEmailVerificationToken(user._id, normalizedEmail);
+    console.log("Generated Verification Token:", verificationToken);
 
     // Validate CLIENT_URL
     if (!process.env.CLIENT_URL) {
@@ -53,7 +49,8 @@ const SignUp = async (req, res) => {
     }
 
     // Create verification link
-    const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+    const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    console.log("CLIENT_URL:", process.env.CLIENT_URL);
 
     // Send verification email using notification service
     await sendSignUpNotification(normalizedEmail, fullName, verificationLink);
@@ -70,7 +67,6 @@ const SignUp = async (req, res) => {
     });
   }
 };
-
 
 const Login = async (req, res) => {
   const { email, password } = req.body;
@@ -277,47 +273,18 @@ const resetPassword = async (req, res) => {
 
 const VerifyEmail = async (req, res) => {
   try {
-    const { token } = req.params;
+    const { token } = req.query;
 
     // Verify the token
     let decodedToken;
     try {
       decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
-      // If the token is invalid or expired, generate a new verification token
-      if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
-        const { email } = jwt.decode(token);
-        if (!email) {
-          return re.status(400).json({
-            message: "Invalid or expired verification token, and email could not be retrieved.",
-          });
-        }
-
-        // Generate a new verification token
-        const newToken = generateEmailVerificationToken(decodedToken.userId, email);
-
-        // Send the new verification email
-        const verificationLink = `${process.env.CLIENT_URL}/verify-email/${newToken}`;
-        
-        await sendEmail({
-          to: email,
-          subject: "New Email Verification Link",
-          html: `
-            <h2>Email Verification</h2>
-            <p>Your previous verification link expired. Please use the new link below to verify your email:</p>
-            <a href="${verificationLink}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
-            <p>This link will expire in 24 hours.</p>
-          `,
-        });
-
+      if (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError") {
         return res.status(400).json({
-          message: "Verification token expired. A new verification email has been sent.",
+          message: "Invalid or expired verification token",
         });
       }
-
-      return res.status(400).json({
-        message: "Invalid or expired verification token",
-      });
     }
 
     // Check if it's a verification token
@@ -359,6 +326,7 @@ const VerifyEmail = async (req, res) => {
     });
   }
 };
+
 
 const createFacilityAdmin = async (req, res) => {
   try {

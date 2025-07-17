@@ -3,6 +3,7 @@ const router = express.Router();
 const facilityCtrl = require("../controllers/facility.controller");
 const { auth, authorize } = require("../middlewares/authMiddleware");
 const { validateFacility } = require("../middlewares/validation");
+const upload = require("../middlewares/upload");
 
 // System Admin routes
 router.post(
@@ -39,8 +40,10 @@ router.put(
   validateFacility,
   facilityCtrl.updateFacility
 );
+
 router.post(
-  "/:id/photos",
+  "/:id/photos",upload.array("images", 10),
+   // Accept up to 10 images at a time
   auth,
   authorize("facility_admin"),
   facilityCtrl.uploadFacilityPhotos

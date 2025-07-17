@@ -1,5 +1,7 @@
 const Facility = require('../models/facility');
 const User = require('../models/User');
+const fs = require('fs');
+const cloudinary = require('../config/cloudConfig');
 
 const addFacility = async (req, res) => {
   try {
@@ -398,43 +400,63 @@ const getFacilityDashboard = async (req, res) => {
   }
 };
 
+
 const uploadFacilityPhotos = async (req, res) => {
   try {
     const facilityId = req.params.id;
-    const { images } = req.body; 
-    
-    if (!images || !Array.isArray(images)) {
+
+    // Check if files were uploaded
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Images array is required'
+        message: "No files were uploaded",
       });
     }
-    
+
+    // Array to store Cloudinary URLs
+    const imageObjects = [];
+
+    // Upload each file to Cloudinary
+    for (const file of req.files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: "facility_photos", // Optional: Organize files in a specific folder in Cloudinary
+      });
+
+      // Add the Cloudinary URL as an object with a "url" property
+      imageObjects.push({ url: result.secure_url });
+
+      // Delete the temporary file from the server
+      fs.unlinkSync(file.path);
+    }
+
+    // Update the facility with the new image objects
     const facility = await Facility.findByIdAndUpdate(
       facilityId,
-      { $push: { images: { $each: images } } },
+      { $push: { images: { $each: imageObjects } } }, // Push objects instead of strings
       { new: true }
     );
-    
+
     if (!facility) {
       return res.status(404).json({
         success: false,
-        message: 'Facility not found'
+        message: "Facility not found",
       });
     }
-    
+
     res.status(200).json({
       success: true,
-      message: 'Photos uploaded successfully',
-      data: facility
+      message: "Photos uploaded successfully",
+      data: facility,
     });
   } catch (error) {
-    res.status(500).json({ 
+    console.error("Error uploading facility photos:", error);
+    res.status(500).json({
       success: false,
-      message: error.message 
+      message: error.message,
     });
   }
 };
+
 
 module.exports = {
   addFacility,
