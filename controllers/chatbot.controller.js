@@ -1,4 +1,4 @@
-const getChatbotResponse  = require("../services/cohere");
+const getChatbotResponse = require("../services/cohere");
 
 const handleChatbotQuery = async (req, res) => {
   try {
@@ -12,18 +12,11 @@ const handleChatbotQuery = async (req, res) => {
       });
     }
 
-    // // Extract the token from the Authorization header
-    // const authHeader = req.headers.authorization;
-    // if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: "No token provided",
-    //   });
-    // }
-    // const token = authHeader.split(" ")[1];
+    // Use the authenticated user from req.user (set by the auth middleware)
+    const user = req.user;
 
     // Get the chatbot response from the service
-    const response = await getChatbotResponse(message, token);
+    const response = await getChatbotResponse(message, user);
 
     // Send the response back to the client
     res.status(200).json({
@@ -40,4 +33,4 @@ const handleChatbotQuery = async (req, res) => {
   }
 };
 
-module.exports = {handleChatbotQuery};
+module.exports = { handleChatbotQuery };
