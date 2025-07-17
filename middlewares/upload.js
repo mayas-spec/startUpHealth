@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   // only allow image files - this regex checks for common image extensions
-  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const allowedTypes = /jpeg|jpg|png|webp/;
   // check both the file extension and the mime type for security
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
