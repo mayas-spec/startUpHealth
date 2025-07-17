@@ -42,13 +42,46 @@ router.put(
 );
 
 router.post(
-  "/:id/photos",upload.array("images", 10),
-   // Accept up to 10 images at a time
+  "/:id/photos",
   auth,
   authorize("facility_admin"),
+  upload.array("files", 10),
+  /* 
+    #swagger.tags = ['Facilities']
+    #swagger.summary = 'Upload facility photos'
+    #swagger.requestBody = {
+      required: true,
+      content: {
+        "multipart/form-data": {
+          schema: {
+            type: "object",
+            properties: {
+              files: {
+                type: "array",
+                items: {
+                  type: "string",
+                  format: "binary"
+                },
+                maxItems: 10,
+                description: "Upload up to 10 image files"
+              }
+            }
+          }
+        }
+      }
+    }
+    #swagger.parameters['id'] = {
+      in: 'path',
+      required: true,
+      type: 'string',
+      description: 'Facility ID'
+    }
+    #swagger.responses[200] = {
+      description: 'Photos uploaded successfully'
+    }
+  */
   facilityCtrl.uploadFacilityPhotos
 );
-
 
 router.get("/:id", facilityCtrl.getFacilityWithServices);
 

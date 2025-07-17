@@ -687,13 +687,18 @@
     },
     "/api/facilities/{id}/photos": {
       "post": {
+        "tags": [
+          "Facilities"
+        ],
+        "summary": "Upload facility photos",
         "description": "",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "Facility ID"
           },
           {
             "name": "Authorization",
@@ -703,7 +708,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Photos uploaded successfully"
           },
           "400": {
             "description": "Bad Request"
@@ -719,6 +724,27 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "maxItems": 10,
+                    "description": "Upload up to 10 image files"
+                  }
+                }
+              }
+            }
           }
         }
       }
