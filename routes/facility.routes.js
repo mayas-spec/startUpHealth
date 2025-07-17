@@ -48,6 +48,8 @@ router.post(
   authorize("facility_admin"),
   facilityCtrl.uploadFacilityPhotos
 );
-router.get("/:id", auth, authorize("facility_admin"), facilityCtrl.getFacilityWithServices);
+
+
+router.get("/:id", facilityCtrl.getFacilityWithServices);
 
 module.exports = router;
