@@ -1644,6 +1644,11 @@
         "description": "",
         "parameters": [
           {
+            "name": "Authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "authorization",
             "in": "header",
             "type": "string"
