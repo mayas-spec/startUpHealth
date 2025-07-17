@@ -80,6 +80,9 @@ router.post(
   facilityCtrl.uploadFacilityPhotos
 );
 
+// // / Test route
+// router.post("/:id/photos/test", auth, authorize("facility_admin"), upload.array("files", 10), facilityCtrl.testFacilityUpload);
+
 
 router.get("/:id", facilityCtrl.getFacilityWithServices);
 

@@ -404,7 +404,10 @@ const getFacilityDashboard = async (req, res) => {
 const uploadFacilityPhotos = async (req, res) => {
   try {
     const facilityId = req.params.id;
-
+    
+    console.log('Facility ID:', facilityId);
+    console.log('Files received:', req.files);
+    
     // Check if files were uploaded
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -418,21 +421,36 @@ const uploadFacilityPhotos = async (req, res) => {
 
     // Upload each file to Cloudinary
     for (const file of req.files) {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: "facility_photos", // Optional: Organize files in a specific folder in Cloudinary
-      });
-
-      // Add the Cloudinary URL as an object with a "url" property
-      imageObjects.push({ url: result.secure_url });
-
-      // Delete the temporary file from the server
-      fs.unlinkSync(file.path);
+      console.log('Processing file:', file.filename);
+      
+      try {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "facility_photos",
+        });
+        
+        console.log('Cloudinary upload successful:', result.secure_url);
+        
+        // Add both url and public_id to match your schema
+        imageObjects.push({ 
+          url: result.secure_url,
+          public_id: result.public_id 
+        });
+        
+        // Delete the temporary file from the server
+        fs.unlinkSync(file.path);
+        
+      } catch (cloudinaryError) {
+        console.error('Cloudinary upload error:', cloudinaryError);
+        throw cloudinaryError;
+      }
     }
+
+    console.log('All files uploaded, updating facility...');
 
     // Update the facility with the new image objects
     const facility = await Facility.findByIdAndUpdate(
       facilityId,
-      { $push: { images: { $each: imageObjects } } }, // Push objects instead of strings
+      { $push: { images: { $each: imageObjects } } },
       { new: true }
     );
 
@@ -446,16 +464,77 @@ const uploadFacilityPhotos = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Photos uploaded successfully",
-      data: facility,
+      data: {
+        facility: facility,
+        uploadedImages: imageObjects
+      }
     });
+
   } catch (error) {
     console.error("Error uploading facility photos:", error);
+    console.error("Error stack:", error.stack);
+    
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
+
+// const testFacilityUpload = async (req, res) => {
+//   try {
+//     const facilityId = req.params.id;
+    
+//     console.log('=== TEST UPLOAD START ===');
+//     console.log('Facility ID:', facilityId);
+//     console.log('Files:', req.files);
+//     console.log('Body:', req.body);
+    
+//     // Check if facility exists
+//     const facility = await Facility.findById(facilityId);
+//     if (!facility) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Facility not found",
+//       });
+//     }
+    
+//     console.log('Facility found:', facility.name);
+    
+//     // Test if files are received
+//     if (!req.files || req.files.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No files were uploaded",
+//       });
+//     }
+    
+//     console.log('Files received successfully');
+    
+//     res.json({
+//       success: true,
+//       message: 'Test successful',
+//       facilityId: facilityId,
+//       facilityName: facility.name,
+//       filesCount: req.files.length,
+//       files: req.files.map(f => ({
+//         filename: f.filename,
+//         originalname: f.originalname,
+//         size: f.size,
+//         path: f.path
+//       }))
+//     });
+    
+//   } catch (error) {
+//     console.error('Test error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: error.message,
+//       stack: error.stack
+//     });
+//   }
+// };
 
 
 module.exports = {
@@ -469,4 +548,5 @@ module.exports = {
   getAvailableTimeSlots,
   getFacilityDashboard,
   uploadFacilityPhotos
+  // testFacilityUpload
 };
