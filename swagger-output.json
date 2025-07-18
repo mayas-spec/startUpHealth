@@ -707,8 +707,7 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string",
-            "description": "Facility ID"
+            "type": "string"
           },
           {
             "name": "Authorization",
@@ -720,7 +719,8 @@
             "in": "formData",
             "type": "file",
             "required": true,
-            "description": "Image files to upload (max 10)"
+            "description": "Select multiple image files (max 10)",
+            "collectionFormat": "multi"
           }
         ],
         "responses": {
@@ -728,16 +728,13 @@
             "description": "Photos uploaded successfully"
           },
           "400": {
-            "description": "Bad request"
+            "description": "Bad Request"
           },
           "401": {
             "description": "Unauthorized"
           },
           "403": {
             "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           },
           "500": {
             "description": "Internal Server Error"
