@@ -75,7 +75,7 @@ const Login = async (req, res) => {
     console.log("Login attempt:", email);
     const normalizedEmail = email.toLowerCase();
     const user = await User.findOne({ email: normalizedEmail });
-    
+
     if (!user) {
       console.log("User not found");
       return res.status(400).json({ message: "Invalid credentials" });
@@ -93,7 +93,6 @@ const Login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     console.log("Password match result:", isMatch);
 
-
     if (!isMatch) {
       console.log("Password comparison failed");
       return res.status(400).json({ message: "Invalid credentials" });
@@ -105,14 +104,21 @@ const Login = async (req, res) => {
       role: user.role,
     });
 
+    
+    const responseData = {
+      id: user._id,
+      name: user.fullName,
+      email: user.email,
+      role: user.role,
+    };
+
+    if (user.role === "facility_admin") {
+      responseData.facilityId = user.facility; 
+    }
+
     return res.status(200).json({
       token,
-      user: {
-        id: user._id,
-        name: user.fullName,
-        email: user.email,
-        role: user.role,
-      },
+      user: responseData,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -330,7 +336,7 @@ const VerifyEmail = async (req, res) => {
 
 const createFacilityAdmin = async (req, res) => {
   try {
-    const { fullName, email, password, contact, facility } = req.body;
+    const { fullName, email, password, contact, facility} = req.body;
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
@@ -361,7 +367,7 @@ const createFacilityAdmin = async (req, res) => {
         fullName: facilityAdmin.fullName,
         email: facilityAdmin.email,
         role: facilityAdmin.role,
-        facility: facilityAdmin.facility,
+        facilityId: facilityAdmin.facility,
       },
     });
   } catch (error) {

@@ -403,12 +403,10 @@ const getFacilityDashboard = async (req, res) => {
 
 const uploadFacilityPhotos = async (req, res) => {
   try {
-    const facilityId = req.params.id;
-    
-    console.log('Facility ID:', facilityId);
-    console.log('Files received:', req.files);
-    
-    // Check if files were uploaded
+    console.log("Request received at /api/facilities/:id/photos");
+    console.log("Facility ID:", req.params.id);
+    console.log("Uploaded Files:", req.files);
+
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
@@ -416,64 +414,13 @@ const uploadFacilityPhotos = async (req, res) => {
       });
     }
 
-    // Array to store Cloudinary URLs
-    const imageObjects = [];
-
-    // Upload each file to Cloudinary
-    for (const file of req.files) {
-      console.log('Processing file:', file.filename);
-      
-      try {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "facility_photos",
-        });
-        
-        console.log('Cloudinary upload successful:', result.secure_url);
-        
-        // Add both url and public_id to match your schema
-        imageObjects.push({ 
-          url: result.secure_url,
-          public_id: result.public_id 
-        });
-        
-        // Delete the temporary file from the server
-        fs.unlinkSync(file.path);
-        
-      } catch (cloudinaryError) {
-        console.error('Cloudinary upload error:', cloudinaryError);
-        throw cloudinaryError;
-      }
-    }
-
-    console.log('All files uploaded, updating facility...');
-
-    // Update the facility with the new image objects
-    const facility = await Facility.findByIdAndUpdate(
-      facilityId,
-      { $push: { images: { $each: imageObjects } } },
-      { new: true }
-    );
-
-    if (!facility) {
-      return res.status(404).json({
-        success: false,
-        message: "Facility not found",
-      });
-    }
-
     res.status(200).json({
       success: true,
-      message: "Photos uploaded successfully",
-      data: {
-        facility: facility,
-        uploadedImages: imageObjects
-      }
+      message: "Files uploaded successfully",
+      data: req.files,
     });
-
   } catch (error) {
-    console.error("Error uploading facility photos:", error);
-    console.error("Error stack:", error.stack);
-    
+    console.error("Error in uploadFacilityPhotos:", error);
     res.status(500).json({
       success: false,
       message: error.message,
